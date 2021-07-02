@@ -1,0 +1,15 @@
+{
+    "name": "djs-voice",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc src",
+        "start": "tsnode "
+    },
+    "dependencies": {
+        "discord.js": "^12.5.3",
+        "mongoose": "^5.13.0",
+        "ms": "^2.1.3"
+    }
+}

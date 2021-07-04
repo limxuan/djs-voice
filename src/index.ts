@@ -115,6 +115,7 @@ export class VoiceClient {
             Guild: message.guild.id,
             User: user.id,
         });
+        if (!data) return null;
         const position = (await this.sortUsers(message)).findIndex(
             (x: any) => x.User === user.id
         );

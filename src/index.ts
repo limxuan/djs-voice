@@ -48,6 +48,9 @@ export class VoiceClient {
     }
     /**
      * @description Put this inside your voiceStateChange client event!
+     * @param {VoiceState} oldState
+     * @param {VoiceState} newState
+     * @returns {Promise<void>}
      */
     public async startListener(oldState: VoiceState, newState: VoiceState) {
         if (newState.member.user.bot && !this.options.allowBots) return;
@@ -216,7 +219,7 @@ export class VoiceClient {
     }
 }
 
-interface sendLeaderboardOptions {
+export interface sendLeaderboardOptions {
     message: Message;
     title?: string;
     color?: string;
@@ -224,12 +227,12 @@ interface sendLeaderboardOptions {
     thumbnail?: string;
 }
 
-interface userObject {
+export interface userObject {
     User: string;
     Time: number;
     Guild: string;
 }
 
-interface userData extends userObject {
+export interface userData extends userObject {
     position: number;
 }

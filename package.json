@@ -1,6 +1,6 @@
 {
     "name": "djs-voice",
-    "version": "1.0.000000000001",
+    "version": "1.0.2",
     "main": "dist/index.js",
     "license": "MIT",
     "author": {
@@ -9,9 +9,11 @@
     "repository": {
         "url": "https://github.com/reconlx/djs-voice"
     },
+    "homepage": "https://reconlx.github.io/djs-voice/",
     "scripts": {
         "build": "tsc src",
-        "start": "tsnode "
+        "start": "ts node ",
+        "docs": "npx typedoc src/index.ts"
     },
     "dependencies": {
         "discord.js": "^12.5.3",

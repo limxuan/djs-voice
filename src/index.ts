@@ -1,8 +1,15 @@
 import { options } from "./interfaces";
 import mongoose, { Document } from "mongoose";
-import { Client, Message, User, VoiceState } from "discord.js";
+import {
+    Client,
+    Message,
+    MessageEmbed,
+    TextChannel,
+    User,
+    VoiceState,
+} from "discord.js";
 import ms from "ms";
-
+import { ReactionPages } from "reconlx";
 export class VoiceClient {
     public client: Client;
     public options: options;
@@ -16,7 +23,7 @@ export class VoiceClient {
                 Guild: String,
             })
         ),
-        user: mongoose.model(
+        user: mongoose.model<userObject>(
             "djs-voice-users",
             new mongoose.Schema({
                 User: String,
@@ -39,7 +46,9 @@ export class VoiceClient {
         this.options = options;
         this.client = options.client;
     }
-
+    /**
+     * @description Put this inside your voiceStateChange client event!
+     */
     public async startListener(oldState: VoiceState, newState: VoiceState) {
         if (newState.member.user.bot && !this.options.allowBots) return;
         const userID = newState.member.id;
@@ -102,7 +111,10 @@ export class VoiceClient {
         }
     }
 
-    private async sortUsers(message: Message): Promise<Document[]> {
+    /**
+     * @description Fetching and sorting raw data from guild
+     */
+    public async sortUsers(message: Message): Promise<userObject[]> {
         const userLeaderboard = await this.schemas.user
             .find({ Guild: message.guild.id })
             .sort({ Time: -1 });
@@ -110,7 +122,10 @@ export class VoiceClient {
         return userLeaderboard;
     }
 
-    public async getUserData(message: Message, user: User) {
+    /**
+     * @description Gives you all the data you need about a user
+     */
+    public async getUserData(message: Message, user: User): Promise<userData> {
         const data = await this.schemas.user.findOne({
             Guild: message.guild.id,
             User: user.id,
@@ -122,4 +137,99 @@ export class VoiceClient {
 
         return { ...data, position };
     }
+
+    /**
+     * @description Sending a leaderboard!
+     */
+    public async sendLeaderboard(
+        options: sendLeaderboardOptions
+    ): Promise<void> {
+        let { message, title, color, displayAllUsers, thumbnail } = options;
+
+        const data = await this.sortUsers(message);
+
+        let i = 1;
+        if (displayAllUsers) {
+            const chunks: userObject[][] = this.chunkArrays(data, 10);
+            const array = [];
+            for (const chunk of chunks) {
+                const mapping = chunk
+                    .map((value) => {
+                        return `\`#${i++}\` <@${value.User}> (${ms(
+                            value.Time
+                        )})`;
+                    })
+                    .join("\n\n");
+
+                array.push(
+                    new MessageEmbed()
+                        .setTitle(
+                            title || `Leaderboard in **${message.guild.name}**`
+                        )
+                        .setColor(color || "RANDOM")
+                        .setThumbnail(thumbnail || null)
+                        .setDescription(mapping)
+                );
+            }
+
+            ReactionPages(message, array, false);
+        } else {
+            const topTen = data.slice(0, 10);
+
+            message.channel.send(
+                new MessageEmbed()
+                    .setTitle(
+                        title || `Leaderboard in **${message.guild.name}**`
+                    )
+                    .setColor(color || "RANDOM")
+                    .setThumbnail(thumbnail || null)
+                    .setDescription(
+                        topTen
+                            .map((x) => {
+                                return `\`${i++}\` <@${x.User}> (${ms(
+                                    x.Time
+                                )})`;
+                            })
+                            .join("\n\n")
+                    )
+            );
+        }
+    }
+
+    /**
+     * @description Reset the entire voice system database!
+     */
+    public async reset(message: Message) {
+        await this.schemas.timer.deleteMany({ Guild: message.guild.id });
+        await this.schemas.user.deleteMany({ Guild: message.guild.id });
+    }
+
+    /**
+     * @description Chunk arrays into smaller arrays
+     */
+    public chunkArrays(arr: any[], size: number): any[][] {
+        const array = [];
+        for (let i = 0; i < arr.length; i += size) {
+            array.push(arr.slice(i, i + size));
+        }
+        return array;
+    }
+}
+
+interface sendLeaderboardOptions {
+    message: Message;
+    title?: string;
+    color?: string;
+    displayAllUsers?: boolean;
+    thumbnail?: string;
+}
+
+interface userObject {
+    User: string;
+    Time: number;
+    Guild: string;
+}
+
+interface userData extends userObject {
+    position: number;
 }

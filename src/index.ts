@@ -178,7 +178,7 @@ export class VoiceClient {
      * @param time Time you want to change in miliseconds
      */
     public setTime(message: Message, user: User, time: number) {
-        return this.schemas.user.findOne(
+        this.schemas.user.findOne(
             { Guild: message.guild.id, User: user.id },
             async (err, data) => {
                 if (err && this.options.debug) return console.log(err);

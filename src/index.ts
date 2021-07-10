@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { Client, Message, MessageEmbed, User, VoiceState } from "discord.js";
 import ms from "ms";
-import { ReactionPages } from "reconlx";
 export class VoiceClient {
     public client: Client;
     public options: VoiceClientOptions;
@@ -40,8 +39,8 @@ export class VoiceClient {
     }
     /**
      * @description Put this inside your voiceStateChange client event!
-     * @param {VoiceState} oldState
-     * @param {VoiceState} newState
+     * @param {VoiceState} oldState discord.js's VoiceState
+     * @param {VoiceState} newState discord.js's VoiceState
      * @returns {Promise<void>}
      */
     public async startListener(oldState: VoiceState, newState: VoiceState) {
@@ -68,7 +67,7 @@ export class VoiceClient {
             }).save();
         }
 
-        if (oldState.channel.id && !newState.channel.id) {
+        if (oldState.channel?.id && !newState.channel?.id) {
             if (this.options.debug)
                 console.log(
                     `${newState.member.user.tag} has left a voice channel`
@@ -108,6 +107,7 @@ export class VoiceClient {
 
     /**
      * @description Fetching and sorting raw data from guild
+     * @param {Message} message discord.js's message class
      */
     public async sortUsers(message: Message): Promise<userObject[]> {
         const userLeaderboard = await this.schemas.user
@@ -119,6 +119,8 @@ export class VoiceClient {
 
     /**
      * @description Gives you all the data you need about a user
+     * @param {Message} message discord.js's Message class
+     * @param {User} user discord.js's User class
      */
     public async getUserData(message: Message, user: User): Promise<userData> {
         const data = await this.schemas.user.findOne({
@@ -129,70 +131,40 @@ export class VoiceClient {
         const position = (await this.sortUsers(message)).findIndex(
             (x: any) => x.User === user.id
         );
-
-        return { ...data, position };
+        const { User, Time, Guild, _id } = data;
+        return { _id, User, Time, Guild, position };
     }
 
     /**
-     * @description Sending a leaderboard!
+     * @description Generating a leaderbord
      */
-    public async sendLeaderboard(
-        options: sendLeaderboardOptions
-    ): Promise<void> {
-        let { message, title, color, displayAllUsers, thumbnail } = options;
+    public async generateLeaderboard(
+        options: generateLeaderboardOptions
+    ): Promise<MessageEmbed> {
+        let { message, title, color, top, thumbnail } = options;
 
         const data = await this.sortUsers(message);
 
         let i = 1;
-        if (displayAllUsers) {
-            const chunks: userObject[][] = this.chunkArrays(data, 10);
-            const array = [];
-            for (const chunk of chunks) {
-                const mapping = chunk
-                    .map((value) => {
-                        return `\`#${i++}\` <@${value.User}> (${ms(
-                            value.Time
-                        )})`;
+
+        const topTen = data.slice(0, top || 10);
+        console.log(topTen);
+        return new MessageEmbed()
+            .setTitle(title || `Leaderboard in **${message.guild.name}**`)
+            .setColor(color || "RANDOM")
+            .setThumbnail(thumbnail || null)
+            .setDescription(
+                topTen
+                    .map((x) => {
+                        return `\`${i++}\` <@${x.User}> (${ms(x.Time)})`;
                     })
-                    .join("\n\n");
-
-                array.push(
-                    new MessageEmbed()
-                        .setTitle(
-                            title || `Leaderboard in **${message.guild.name}**`
-                        )
-                        .setColor(color || "RANDOM")
-                        .setThumbnail(thumbnail || null)
-                        .setDescription(mapping)
-                );
-            }
-
-            ReactionPages(message, array, false);
-        } else {
-            const topTen = data.slice(0, 10);
-
-            message.channel.send(
-                new MessageEmbed()
-                    .setTitle(
-                        title || `Leaderboard in **${message.guild.name}**`
-                    )
-                    .setColor(color || "RANDOM")
-                    .setThumbnail(thumbnail || null)
-                    .setDescription(
-                        topTen
-                            .map((x) => {
-                                return `\`${i++}\` <@${x.User}> (${ms(
-                                    x.Time
-                                )})`;
-                            })
-                            .join("\n\n")
-                    )
+                    .join("\n\n")
             );
-        }
     }
 
     /**
      * @description Reset the entire voice system database!
+     * @param {Message} message discord.js's Message class
      */
     public async reset(message: Message) {
         await this.schemas.timer.deleteMany({ Guild: message.guild.id });
@@ -211,11 +183,11 @@ export class VoiceClient {
     }
 }
 
-export interface sendLeaderboardOptions {
+export interface generateLeaderboardOptions {
     message: Message;
     title?: string;
     color?: string;
-    displayAllUsers?: boolean;
+    top?: number;
     thumbnail?: string;
 }
 export interface userObject {
@@ -226,6 +198,7 @@ export interface userObject {
 
 export interface userData extends userObject {
     position: number;
+    _id: any;
 }
 
 export interface VoiceClientOptions {

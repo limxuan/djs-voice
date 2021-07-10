@@ -5,7 +5,6 @@
         "moduleResolution": "node",
         "target": "ESNext",
         "declaration": true,
-        "emitDeclarationOnly": true,
         "outDir": "dist",
         "sourceMap": true,
         "esModuleInterop": true,

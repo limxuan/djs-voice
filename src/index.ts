@@ -1,11 +1,10 @@
-import { options } from "./interfaces";
-import mongoose, { Document } from "mongoose";
+import mongoose from "mongoose";
 import { Client, Message, MessageEmbed, User, VoiceState } from "discord.js";
 import ms from "ms";
 import { ReactionPages } from "reconlx";
 export class VoiceClient {
     public client: Client;
-    public options: options;
+    public options: VoiceClientOptions;
 
     public schemas = {
         timer: mongoose.model(
@@ -232,4 +231,6 @@ export interface userData extends userObject {
 export interface VoiceClientOptions {
     mongooseConnectionString: string;
     client: Client;
+    allowBots: boolean;
+    debug: boolean;
 }

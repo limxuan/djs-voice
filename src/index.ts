@@ -148,7 +148,7 @@ export class VoiceClient {
         let i = 1;
 
         const topTen = data.slice(0, top || 10);
-        console.log(topTen);
+        if (this.options.debug) console.log(topTen);
         return new MessageEmbed()
             .setTitle(title || `Leaderboard in **${message.guild.name}**`)
             .setColor(color || "RANDOM")

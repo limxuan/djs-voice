@@ -172,6 +172,23 @@ export class VoiceClient {
     }
 
     /**
+     * @description Change a user's voice channel time in a specific guild
+     * @param message discord.js's Message class
+     * @param user discord.js's User class
+     * @param time Time you want to change in miliseconds
+     */
+    public setTime(message: Message, user: User, time: number) {
+        return this.schemas.user.findOne(
+            { Guild: message.guild.id, User: user.id },
+            async (err, data) => {
+                if (err && this.options.debug) return console.log(err);
+                data.Time = time;
+                data.save();
+            }
+        );
+    }
+
+    /**
      * @description Chunk arrays into smaller arrays
      */
     public chunkArrays(arr: any[], size: number): any[][] {

@@ -1,13 +1,6 @@
 import { options } from "./interfaces";
 import mongoose, { Document } from "mongoose";
-import {
-    Client,
-    Message,
-    MessageEmbed,
-    TextChannel,
-    User,
-    VoiceState,
-} from "discord.js";
+import { Client, Message, MessageEmbed, User, VoiceState } from "discord.js";
 import ms from "ms";
 import { ReactionPages } from "reconlx";
 export class VoiceClient {
@@ -32,7 +25,7 @@ export class VoiceClient {
             })
         ),
     };
-    constructor(options: options) {
+    constructor(options: VoiceClientOptions) {
         if (mongoose.connection.readyState === 1) return;
         if (!options.mongooseConnectionString)
             throw new Error(
@@ -226,7 +219,6 @@ export interface sendLeaderboardOptions {
     displayAllUsers?: boolean;
     thumbnail?: string;
 }
-
 export interface userObject {
     User: string;
     Time: number;
@@ -235,4 +227,9 @@ export interface userObject {
 
 export interface userData extends userObject {
     position: number;
+}
+
+export interface VoiceClientOptions {
+    mongooseConnectionString: string;
+    client: Client;
 }

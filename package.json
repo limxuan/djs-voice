@@ -11,8 +11,7 @@
     },
     "homepage": "https://reconlx.github.io/djs-voice/",
     "scripts": {
-        "build": "tsc src",
-        "start": "ts node ",
+        "build": "tsc",
         "docs": "npx typedoc src/index.ts"
     },
     "dependencies": {

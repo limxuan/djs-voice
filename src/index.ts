@@ -219,8 +219,22 @@ export interface userData extends userObject {
 }
 
 export interface VoiceClientOptions {
+    /**
+     * @description MongoDB connection string
+     */
     mongooseConnectionString: string;
+    /**
+     * @description discord.js Client
+     */
     client: Client;
+    /**
+     * @description Allow bots to be saved to the database?
+     * @default false
+     */
     allowBots: boolean;
+    /**
+     * @description Logging out all activities (user join, user leave, etc)
+     * @default false
+     */
     debug: boolean;
 }

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Client, Message, MessageEmbed, User, VoiceState } from "discord.js";
 import ms from "ms";
 import { ColorResolvable } from "discord.js";
+import { Guild } from "discord.js";
 export class VoiceClient {
     public client: Client;
     public options: VoiceClientOptions;
@@ -108,11 +109,11 @@ export class VoiceClient {
 
     /**
      * @description Fetching and sorting raw data from guild
-     * @param {Message} message discord.js's message class
+     * @param {Guild} guild discord.js's guild aka `message.guild`
      */
-    public async sortUsers(message: Message): Promise<userObject[]> {
+    public async sortUsers(guild: Guild): Promise<userObject[]> {
         const userLeaderboard = await this.schemas.user
-            .find({ Guild: message.guild.id })
+            .find({ Guild: guild.id })
             .sort({ Time: -1 });
 
         return userLeaderboard;
@@ -120,16 +121,16 @@ export class VoiceClient {
 
     /**
      * @description Gives you all the data you need about a user
-     * @param {Message} message discord.js's Message class
+     * @param {Guild} guild discord.js's guild class aka `message.guild`
      * @param {User} user discord.js's User class
      */
-    public async getUserData(message: Message, user: User): Promise<userData> {
+    public async getUserData(guild: Guild, user: User): Promise<userData> {
         const data = await this.schemas.user.findOne({
-            Guild: message.guild.id,
+            Guild: guild.id,
             User: user.id,
         });
         if (!data) return null;
-        const position = (await this.sortUsers(message)).findIndex(
+        const position = (await this.sortUsers(guild)).findIndex(
             (x: any) => x.User === user.id
         );
         const { User, Time, Guild, _id } = data;
@@ -142,16 +143,16 @@ export class VoiceClient {
     public async generateLeaderboard(
         options: generateLeaderboardOptions
     ): Promise<MessageEmbed> {
-        let { message, title, color, top, thumbnail } = options;
+        let { guild, title, color, top, thumbnail } = options;
 
-        const data = await this.sortUsers(message);
+        const data = await this.sortUsers(guild);
 
         let i = 1;
 
         const topTen = data.slice(0, top || 10);
         if (this.options.debug) console.log(topTen);
         return new MessageEmbed()
-            .setTitle(title || `Leaderboard in **${message.guild.name}**`)
+            .setTitle(title || `Leaderboard in **${guild.name}**`)
             .setColor((color as ColorResolvable) || "RANDOM")
             .setThumbnail(thumbnail || null)
             .setDescription(
@@ -165,22 +166,22 @@ export class VoiceClient {
 
     /**
      * @description Reset the entire voice system database!
-     * @param {Message} message discord.js's Message class
+     * @param {Guild} guild discord.js's guild class aka `message.guild`
      */
-    public async reset(message: Message) {
-        await this.schemas.timer.deleteMany({ Guild: message.guild.id });
-        await this.schemas.user.deleteMany({ Guild: message.guild.id });
+    public async reset(guild: Guild) {
+        await this.schemas.timer.deleteMany({ Guild: guild.id });
+        await this.schemas.user.deleteMany({ Guild: guild.id });
     }
 
     /**
      * @description Change a user's voice channel time in a specific guild
-     * @param message discord.js's Message class
+     * @param {Guild} guild discord.js's guild class aka `message.guild`
      * @param user discord.js's User class
      * @param time Time you want to change in miliseconds
      */
-    public setTime(message: Message, user: User, time: number) {
+    public setTime(guild: Guild, user: User, time: number) {
         this.schemas.user.findOne(
-            { Guild: message.guild.id, User: user.id },
+            { Guild: guild.id, User: user.id },
             async (err, data) => {
                 if (err && this.options.debug) return console.log(err);
                 data.Time = time;
@@ -202,7 +203,7 @@ export class VoiceClient {
 }
 
 export interface generateLeaderboardOptions {
-    message: Message;
+    guild: Guild;
     title?: string;
     color?: string;
     top?: number;

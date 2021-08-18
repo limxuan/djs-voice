@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Client, Message, MessageEmbed, User, VoiceState } from "discord.js";
 import ms from "ms";
+import { ColorResolvable } from "discord.js";
 export class VoiceClient {
     public client: Client;
     public options: VoiceClientOptions;
@@ -151,7 +152,7 @@ export class VoiceClient {
         if (this.options.debug) console.log(topTen);
         return new MessageEmbed()
             .setTitle(title || `Leaderboard in **${message.guild.name}**`)
-            .setColor(color || "RANDOM")
+            .setColor((color as ColorResolvable) || "RANDOM")
             .setThumbnail(thumbnail || null)
             .setDescription(
                 topTen
